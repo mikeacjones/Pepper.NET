@@ -22,6 +22,11 @@
             if (changelistID > 0) Database.ChangesCommitted(changelistID);
             return changelistID > 0 ? SaveResult.Success : SaveResult.Failure;
         }
+        public void Sync()
+        {
+            var signageData = _LoadManager.LoadData();
+            if (signageData != null) Database.PopulateTables(signageData);
+        }
     }
     public enum SaveResult
     {
