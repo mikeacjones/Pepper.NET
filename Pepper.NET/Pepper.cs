@@ -34,6 +34,7 @@ namespace Pepper.NET
             var signageData = _LoadManager.LoadData();
             if (signageData != null) Database.PopulateTables(signageData);
         }
+
         public void UploadResource(string resourcePath)
         {
             Record newResource = Database["resources"].CreateRecord();
@@ -56,6 +57,12 @@ namespace Pepper.NET
             newResource["shortcut_resource_id"] = -1;
             Database["resources"].Add(newResource);
             _FileToUpload.Push(resourcePath);
+        }
+        public void DeleteResource(string resourceID)
+        {
+            var rec = Database["resources"].Where(r => r["resource_id"].ToString() == resourceID).FirstOrDefault();
+            if (rec == null) return;
+            Database["resources"].Remove(rec);
         }
     }
     public enum SaveResult
