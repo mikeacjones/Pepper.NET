@@ -1,5 +1,9 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net.Http;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -42,13 +46,26 @@ namespace Pepper.NET
             xmlDoc.LoadXml(xml);
             return xmlDoc;
         }
-        public int SaveData(XDocument changeList)
+        public int SaveData(XDocument changeList, Stack<string> filesToUpload)
         {
-            System.IO.File.WriteAllText("C:\\temp\\ChnageListDLL.txt", changeList.ToString());
-            string url = string.Format("https://{0}/WebService/SubmitData.ashx?command=Begin&userpass={1}&appVersion=4.12&appType=StudioLite", UserDomainInfo.Domain, UserPass);
-
-            StandardReturn cookieRet = Utils.GetHttpResponse(url);
+            StandardReturn cookieRet = BeginPostSession();
             string data = Utils.Base64Encode(changeList.ToString()).Replace('=', '.').Replace('+', '_').Replace('/', '-');
+            var uploadURL = string.Format("https://{0}/WebService/JsUpload.ashx", UserDomainInfo.Domain);
+
+            while (filesToUpload != null && filesToUpload.Count > 0)
+            {
+                var fileToUpload = filesToUpload.Pop();
+                HttpClient httpClient = new HttpClient();
+                MultipartFormDataContent form = new MultipartFormDataContent();
+                form.Add(new StringContent(Path.GetFileName(fileToUpload)), "filename");
+                form.Add(new StringContent(cookieRet), "cookie");
+                form.Add(new ByteArrayContent(File.ReadAllBytes(fileToUpload)), "file");
+                var postTask = httpClient.PostAsync(uploadURL, form);
+                postTask.Wait();
+                HttpResponseMessage response = postTask.Result; 
+                response.EnsureSuccessStatusCode();
+                httpClient.Dispose();
+            }
 
             StandardReturn saveResult = MultiPost(cookieRet, data, 0);
             int changeListID = -1;
@@ -62,6 +79,13 @@ namespace Pepper.NET
             catch { }
 
             return changeListID;
+        }
+        private StandardReturn BeginPostSession()
+        {
+            string url = string.Format("https://{0}/WebService/SubmitData.ashx?command=Begin&userpass={1}&appVersion=4.12&appType=StudioLite", UserDomainInfo.Domain, UserPass);
+
+            StandardReturn cookieRet = Utils.GetHttpResponse(url);
+            return cookieRet;
         }
         private StandardReturn MultiPost(string cookie, string data, int i)
         {
@@ -77,6 +101,31 @@ namespace Pepper.NET
             StandardReturn response = Utils.GetHttpResponse(url);
             if (i == j)  return response;
             else return MultiPost(cookie, data, j);
+        }
+        public async Task<bool> UploadResource(string resourceName, string resourcePath)
+        {
+            try
+            {
+                var cookie = BeginPostSession();
+                var url = string.Format("https://{0}/WebService/JsUpload.ashx", UserDomainInfo.Domain);
+
+                HttpClient httpClient = new HttpClient();
+                MultipartFormDataContent form = new MultipartFormDataContent();
+                form.Add(new StringContent(resourceName), "filename");
+                form.Add(new StringContent(cookie), "cookie");
+                form.Add(new ByteArrayContent(File.ReadAllBytes(resourcePath)), "file");
+                HttpResponseMessage response = await httpClient.PostAsync(url, form);
+                response.EnsureSuccessStatusCode();
+                httpClient.Dispose();
+                string sd = response.Content.ReadAsStringAsync().Result;
+                System.Diagnostics.Debug.WriteLine(sd);
+                MultiPost(cookie, "", 0);
+                return true;
+            }
+            catch(Exception ex) {
+                System.Diagnostics.Debug.WriteLine(ex.Message);
+                return false;
+            }
         }
     }
     class UserDomainInfo

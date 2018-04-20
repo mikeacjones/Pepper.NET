@@ -5,16 +5,14 @@ using System.Xml.Linq;
 
 namespace Pepper.NET
 {
-    public class Database
+    public class Database : Dictionary<string, Table>
     {
-        private Dictionary<string, Table> _Tables;
         private int _LastChangeID;
 
-        internal Database()
+        internal Database() : base()
         {
-            _Tables = new Dictionary<string, Table>();
             foreach (string tableName in _TableNames)
-                _Tables.Add(tableName, new Table(tableName));
+                Add(tableName, new Table(tableName));
         }
         internal void PopulateTables(XmlDocument xdoc)
         {
@@ -22,44 +20,34 @@ namespace Pepper.NET
             foreach (XmlNode table in xdoc.FirstChild.ChildNodes)
             {
                 string tableName = table.Attributes["name"].Value;
-                if (!_Tables.ContainsKey(tableName)) continue;
-                _Tables[tableName].LoadRecords(table);
+                if (!ContainsKey(tableName)) continue;
+                this[tableName].LoadRecords(table);
             }
         }
         internal XDocument GetChangeList()
         {
             XDocument xdoc = new XDocument();
 
-            var tablesWithChanges = _Tables.Where(t => t.Value.HasChanges).Select(t => t.Value);
-            if (tablesWithChanges.Count() == 0) return null;
+            var tablesWithChanges = this.Where(t => t.Value.HasChanges).Select(t => t.Value);
+            var tablesWithDeletes = this.Where(t => t.Value.HasRemoved).Select(t => t.Value);
+            if (tablesWithChanges.Count() == 0 && tablesWithDeletes.Count() == 0) return null;
 
             var changeList = new XElement("Changelist");
             xdoc.Add(changeList);
 
-            foreach (var table in tablesWithChanges)
-                table.AppendChangesToChangelist(changeList);
+            foreach (var table in tablesWithChanges) table.AppendChangesToChangelist(changeList);
+            foreach (var table in tablesWithDeletes) table.AppendDeletesToChangelist(changeList);
 
+            System.Console.WriteLine(xdoc.ToString());
             return xdoc;
         }
-        public Table this[string tableName]
-        {
-            get
-            {
-                if (!_Tables.ContainsKey(tableName)) return null;
-                return _Tables[tableName];
-            }
-        }
-        public int TableCount { get { return _Tables.Count; } }
-        public string[] TableName { get { return _Tables.Keys.ToArray(); } }
+        public int TableCount { get { return Count; } }
+        public string[] TableName { get { return Keys.ToArray(); } }
         internal void ChangesCommitted(int changeID)
         {
-            var tablesWithChanges = _Tables.Where(t => t.Value.HasChanges).Select(t => t.Value);
+            var tablesWithChanges = this.Where(t => t.Value.HasChanges).Select(t => t.Value);
             foreach (var table in tablesWithChanges)
                 table.ChangesCommitted(changeID);
-        }
-        public IEnumerator<Table> GetEnumerator()
-        {
-            return _Tables.Values.GetEnumerator();
         }
 
         #region STATIC VARIABLES

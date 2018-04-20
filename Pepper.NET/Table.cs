@@ -8,14 +8,15 @@ using System.Xml.Linq;
 
 namespace Pepper.NET
 {
-    public class Table
+    public class Table : List<Record>
     {
         private string _Name;
         private Field[] _Fields;
-        private List<Record> _Records = new List<Record>();
+        private List<Record> _RemovedRecords;
 
-        public Table(string tableName)
+        public Table(string tableName) : base()
         {
+            _RemovedRecords = new List<Record>();
             string url = string.Format("https://js.signage.me/Table_{0}.js", tableName);
 
             string jsFile = Utils.GetHttpResponse(url);
@@ -31,20 +32,25 @@ namespace Pepper.NET
                 _Fields = fields.ToArray();
             }
         }
+        public new void Remove(Record rec)
+        {
+            _RemovedRecords.Add(rec);
+            base.Remove(rec);
+        }
         public void LoadRecords(XmlNode table)
         {
-            _Records = new List<Record>();
+            this.Clear();
             foreach (XmlNode record in table.ChildNodes)
             {
                 Record rec = new Record();
                 for (int i = 0; i < _Fields.Length && i < record.ChildNodes.Count; i++)
                     rec[_Fields[i].FieldName] = record.ChildNodes[i].InnerText;
-                _Records.Add(rec);
+                this.Add(rec);
             }
         }
         public void ChangesCommitted(int changeID)
         {
-            var recordsWithChanges = _Records.Where(r => r.Modified);
+            var recordsWithChanges = this.Where(r => r.Modified);
             foreach (var record in recordsWithChanges)
             {
                 record["changelist_id"] = changeID;
@@ -54,10 +60,17 @@ namespace Pepper.NET
         public void AppendChangesToChangelist(XElement changeList)
         {
             if (!HasChanges) return;
-            var recordsWithChanges = _Records.Where(r => r.Modified);
+            var recordsWithChanges = this.Where(r => r.Modified && !r.NewRecord);
+            var newRecords = this.Where(r => r.NewRecord);
             XElement table = new XElement("Table", new XAttribute("name", _Name),
                 new XElement("Update",
                     recordsWithChanges.Select(rec => new XElement("Rec",
+                        _Fields.Where(f => f.ForeignTable != null).Select(f => new XAttribute(f.FieldName, rec[f.FieldName])),
+                        _Fields.Select(f => new XElement("Col", rec[f.FieldName] ?? "null"))
+                    ))
+                ),
+                new XElement("New",
+                newRecords.Select(rec => new XElement("Rec",
                         _Fields.Where(f => f.ForeignTable != null).Select(f => new XAttribute(f.FieldName, rec[f.FieldName])),
                         _Fields.Select(f => new XElement("Col", rec[f.FieldName] ?? "null"))
                     ))
@@ -66,68 +79,73 @@ namespace Pepper.NET
             );
             changeList.Add(table);
         }
-        public int RecordsCount { get { return _Records.Count; } }
-        public Record this[int index]
+        public void AppendDeletesToChangelist(XElement changeList)
         {
-            get
-            {
-                return _Records[index];
-            }
+            if (_RemovedRecords.Count == 0) return;
+            XElement table = new XElement("Table", new XAttribute("name", _Name),
+                new XElement("Delete",
+                    _RemovedRecords.Select(rec => new XElement("Rec",
+                        new XAttribute("pk", rec[_Fields[0].FieldName])
+                    ))
+                ),
+                new XElement("Fields", _Fields.Select(f => new XElement("Field", f.FieldName)))
+            );
+            changeList.Add(table);
         }
+        public int RecordsCount { get { return this.Count; } }
         public bool HasChanges
         {
             get
             {
-                return _Records.Count(rec => rec.Modified) > 0;
+                return this.Count(rec => rec.Modified) > 0;
             }
         }
-
-        public IEnumerator<Record> GetEnumerator()
+        public bool HasRemoved
         {
-            return _Records.GetEnumerator();
-        }
-        public IEnumerable<Record> Where(Func<Record, bool> predicate)
-        {
-            foreach (var record in _Records)
+            get
             {
-                if (predicate(record))
-                    yield return record;
+                return _RemovedRecords.Count > 0;
             }
+        }
+        public Record CreateRecord()
+        {
+            Record rec = new Record() { NewRecord = true };
+            for (int i = 0; i < _Fields.Length; i++)
+            {
+                rec[_Fields[i].FieldName] = null;
+            }
+            return rec;
         }
     }
-    public class Record
+    public class Record : Dictionary<string, object>
     {
         public bool Modified { get; private set; }
-        private Dictionary<string, object> Columns { get; set; }
-        public Record()
+        public SetOnce<bool?> _NewRecord = new SetOnce<bool?>();
+        public bool NewRecord { get { return _NewRecord.Value ?? false; } set { _NewRecord.Value = value; } }
+        public Record() : base()
         {
-            Columns = new Dictionary<string, object>();
             Modified = false;
         }
         public void ChangeCommitted()
         {
             Modified = false;
         }
-        public object this[string index]
+        public new object this[string index]
         {
             get
             {
-                return Columns[index];
+                return base[index];
             }
             set
             {
-                if (!Columns.ContainsKey(index)) Columns.Add(index, value);
+                if (!base.ContainsKey(index)) base.Add(index, value);
                 else
                 {
                     Modified = true;
-                    Columns[index] = value;
-                    Columns["change_type"] = 1;
+                    base[index] = value;
+                    base["change_type"] = 1;
                 }
             }
-        }
-        public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
-        {
-            return Columns.GetEnumerator();
         }
     }
     public class Field
