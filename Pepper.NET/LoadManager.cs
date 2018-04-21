@@ -9,7 +9,7 @@ using System.Xml.Linq;
 
 namespace Pepper.NET
 {
-    class LoadManager
+    internal class LoadManager
     {
         readonly SetOnce<UserDomainInfo> _UserDomainInfo = new SetOnce<UserDomainInfo>();
         readonly SetOnce<string> _UserPass = new SetOnce<string>();
@@ -128,7 +128,7 @@ namespace Pepper.NET
             }
         }
     }
-    class UserDomainInfo
+    internal class UserDomainInfo
     {
         readonly SetOnce<string> _Domain = new SetOnce<string>();
         readonly SetOnce<int> _BusinessID = new SetOnce<int>();
@@ -173,7 +173,7 @@ namespace Pepper.NET
             return JsonConvert.DeserializeObject<UserDomainInfo>(httpResponse);
         }
     }
-    class StandardReturn
+    internal class StandardReturn
     {
         readonly SetOnce<string> _Ret = new SetOnce<string>();
         readonly SetOnce<string> _Error = new SetOnce<string>();

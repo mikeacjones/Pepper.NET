@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Pepper.NET
 {
-    class Utils
+    internal class Utils
     {
         public static string Base64Encode(string plainText)
         {

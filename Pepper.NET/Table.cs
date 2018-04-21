@@ -14,7 +14,7 @@ namespace Pepper.NET
         private Field[] _Fields;
         private List<Record> _RemovedRecords;
 
-        public Table(string tableName) : base()
+        internal Table(string tableName) : base()
         {
             _RemovedRecords = new List<Record>();
             string url = string.Format("https://js.signage.me/Table_{0}.js", tableName);
@@ -122,7 +122,7 @@ namespace Pepper.NET
         public bool Modified { get; private set; }
         public SetOnce<bool?> _NewRecord = new SetOnce<bool?>();
         public bool NewRecord { get { return _NewRecord.Value ?? false; } set { _NewRecord.Value = value; } }
-        public Record() : base()
+        internal Record() : base()
         {
             Modified = false;
         }
@@ -154,6 +154,7 @@ namespace Pepper.NET
         readonly SetOnce<string> _ForeignTable = new SetOnce<string>();
         private SetOnce<bool> _IsNullable = new SetOnce<bool>();
 
+        internal Field() { }
 
         [JsonProperty("field")]
         public string FieldName

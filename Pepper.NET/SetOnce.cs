@@ -23,8 +23,8 @@ namespace Pepper.NET
                 this.hasValue = true;
             }
         }
-        public SetOnce() { }
-        public SetOnce(T val)
+        internal SetOnce() { }
+        internal SetOnce(T val)
         {
             this.Value = val;
         }

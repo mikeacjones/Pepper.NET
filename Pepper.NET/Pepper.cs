@@ -9,7 +9,7 @@ namespace Pepper.NET
     {
         private LoadManager _LoadManager;
         private Stack<string> _FileToUpload;
-        public Database Database { get; private set; }
+        private Database Database { get; set; }
 
         public void DbConnect(string user, string pass)
         {
