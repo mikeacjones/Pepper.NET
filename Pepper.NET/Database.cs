@@ -3,7 +3,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace Pepper.NET
+namespace PepperNET
 {
     public class Database : Dictionary<string, Table>
     {

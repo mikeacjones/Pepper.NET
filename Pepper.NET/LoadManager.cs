@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
@@ -7,7 +6,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace Pepper.NET
+namespace PepperNET
 {
     internal class LoadManager
     {
@@ -126,80 +125,6 @@ namespace Pepper.NET
                 System.Diagnostics.Debug.WriteLine(ex.Message);
                 return false;
             }
-        }
-    }
-    internal class UserDomainInfo
-    {
-        readonly SetOnce<string> _Domain = new SetOnce<string>();
-        readonly SetOnce<int> _BusinessID = new SetOnce<int>();
-        readonly SetOnce<string> _ERI = new SetOnce<string>();
-        readonly SetOnce<int> _StudioLite = new SetOnce<int>();
-        readonly SetOnce<string> _ResellerInfo = new SetOnce<string>();
-
-        [JsonProperty("domain")]
-        public string Domain
-        {
-            get { return _Domain; }
-            set { _Domain.Value = value; }
-        }
-        [JsonProperty("businessId")]
-        public int BusinessID
-        {
-            get { return _BusinessID; }
-            set { _BusinessID.Value = value; }
-        }
-        [JsonProperty("eri")]
-        public string ERI
-        {
-            get { return _ERI; }
-            set { _ERI.Value = value; }
-        }
-        [JsonProperty("studioLite")]
-        public int StudioLite
-        {
-            get { return _StudioLite; }
-            set { _StudioLite.Value = value; }
-        }
-        [JsonProperty("resellerInfo")]
-        public string ResellerInfo
-        {
-            get { return _ResellerInfo; }
-            set { _ResellerInfo.Value = value; }
-        }
-
-        public static implicit operator UserDomainInfo(string httpResponse)
-        {
-            httpResponse = httpResponse.Substring(1, httpResponse.Length - 2);
-            return JsonConvert.DeserializeObject<UserDomainInfo>(httpResponse);
-        }
-    }
-    internal class StandardReturn
-    {
-        readonly SetOnce<string> _Ret = new SetOnce<string>();
-        readonly SetOnce<string> _Error = new SetOnce<string>();
-        [JsonProperty("ret")]
-        public string Ret
-        {
-            get { return _Ret; }
-            set { _Ret.Value = value; }
-        }
-        [JsonProperty("error")]
-        public string Error
-        {
-            get { return _Error; }
-            set { _Error.Value = value; }
-        }
-        public static implicit operator StandardReturn(string httpResponse)
-        {
-            if (string.IsNullOrEmpty(httpResponse)) return null;
-            if (httpResponse.Length < 3) return null;
-            httpResponse = httpResponse.Substring(1, httpResponse.Length - 2);
-            return JsonConvert.DeserializeObject<StandardReturn>(httpResponse);
-        }
-        public static implicit operator string(StandardReturn ret)
-        {
-            if (!string.IsNullOrEmpty(ret.Error)) return ret.Error;
-            return ret.Ret;
         }
     }
 }

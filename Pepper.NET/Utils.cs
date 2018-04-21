@@ -3,7 +3,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 
-namespace Pepper.NET
+namespace PepperNET
 {
     internal class Utils
     {

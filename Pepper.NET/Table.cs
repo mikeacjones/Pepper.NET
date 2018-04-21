@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace Pepper.NET
+namespace PepperNET
 {
     public class Table : List<Record>
     {
@@ -115,64 +115,6 @@ namespace Pepper.NET
                 rec[_Fields[i].FieldName] = null;
             }
             return rec;
-        }
-    }
-    public class Record : Dictionary<string, object>
-    {
-        public bool Modified { get; private set; }
-        public SetOnce<bool?> _NewRecord = new SetOnce<bool?>();
-        public bool NewRecord { get { return _NewRecord.Value ?? false; } set { _NewRecord.Value = value; } }
-        internal Record() : base()
-        {
-            Modified = false;
-        }
-        public void ChangeCommitted()
-        {
-            Modified = false;
-        }
-        public new object this[string index]
-        {
-            get
-            {
-                return base[index];
-            }
-            set
-            {
-                if (!base.ContainsKey(index)) base.Add(index, value);
-                else
-                {
-                    Modified = true;
-                    base[index] = value;
-                    base["change_type"] = 1;
-                }
-            }
-        }
-    }
-    public class Field
-    {
-        readonly SetOnce<string> _FieldName = new SetOnce<string>();
-        readonly SetOnce<string> _ForeignTable = new SetOnce<string>();
-        private SetOnce<bool> _IsNullable = new SetOnce<bool>();
-
-        internal Field() { }
-
-        [JsonProperty("field")]
-        public string FieldName
-        {
-            get { return _FieldName; }
-            set { _FieldName.Value = value; }
-        }
-        [JsonProperty("foriegn")]
-        public string ForeignTable
-        {
-            get { return _ForeignTable; }
-            set { _ForeignTable.Value = value; }
-        }
-        [JsonProperty("isNullAble")]
-        public bool IsNullable
-        {
-            get { return _IsNullable; }
-            set { _IsNullable.Value = value; }
         }
     }
 }

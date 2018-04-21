@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Pepper.NET
+namespace PepperNET
 {
     public sealed class SetOnce<T>
     {

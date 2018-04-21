@@ -1,15 +1,14 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Pepper.NET
+namespace PepperNET
 {
     public class Pepper
     {
         private LoadManager _LoadManager;
         private Stack<string> _FileToUpload;
-        private Database Database { get; set; }
+        public Database Database { get; private set; }
 
         public void DbConnect(string user, string pass)
         {
@@ -64,11 +63,5 @@ namespace Pepper.NET
             if (rec == null) return;
             Database["resources"].Remove(rec);
         }
-    }
-    public enum SaveResult
-    {
-        NoChanges,
-        Success,
-        Failure
     }
 }

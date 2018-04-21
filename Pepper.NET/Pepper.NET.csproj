@@ -7,8 +7,8 @@
     <ProjectGuid>{E8B5DE86-3963-4F27-AE05-53D73EDF4F36}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Pepper.NET</RootNamespace>
-    <AssemblyName>Pepper.NET</AssemblyName>
+    <RootNamespace>PepperNET</RootNamespace>
+    <AssemblyName>PepperNET</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -44,11 +44,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Database.cs" />
+    <Compile Include="Enums.cs" />
+    <Compile Include="Field.cs" />
     <Compile Include="LoadManager.cs" />
     <Compile Include="Pepper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Record.cs" />
     <Compile Include="SetOnce.cs" />
+    <Compile Include="StandardReturn.cs" />
     <Compile Include="Table.cs" />
+    <Compile Include="UserDomainInfo.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
