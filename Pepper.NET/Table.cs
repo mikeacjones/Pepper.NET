@@ -36,6 +36,7 @@ namespace PepperNET
         {
             _RemovedRecords.Add(rec);
             base.Remove(rec);
+            rec["change_type"] = 3;
         }
         public void LoadRecords(XmlNode table)
         {
@@ -114,6 +115,7 @@ namespace PepperNET
             {
                 rec[_Fields[i].FieldName] = null;
             }
+            rec["change_type"] = 2;
             return rec;
         }
     }

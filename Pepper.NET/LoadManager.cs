@@ -67,6 +67,7 @@ namespace PepperNET
             }
 
             StandardReturn saveResult = MultiPost(cookieRet, data, 0);
+            Console.WriteLine(saveResult);
             int changeListID = -1;
             try
             {
@@ -101,30 +102,30 @@ namespace PepperNET
             if (i == j)  return response;
             else return MultiPost(cookie, data, j);
         }
-        public async Task<bool> UploadResource(string resourceName, string resourcePath)
-        {
-            try
-            {
-                var cookie = BeginPostSession();
-                var url = string.Format("https://{0}/WebService/JsUpload.ashx", UserDomainInfo.Domain);
+        //public async Task<bool> UploadResource(string resourceName, string resourcePath)
+        //{
+        //    try
+        //    {
+        //        var cookie = BeginPostSession();
+        //        var url = string.Format("https://{0}/WebService/JsUpload.ashx", UserDomainInfo.Domain);
 
-                HttpClient httpClient = new HttpClient();
-                MultipartFormDataContent form = new MultipartFormDataContent();
-                form.Add(new StringContent(resourceName), "filename");
-                form.Add(new StringContent(cookie), "cookie");
-                form.Add(new ByteArrayContent(File.ReadAllBytes(resourcePath)), "file");
-                HttpResponseMessage response = await httpClient.PostAsync(url, form);
-                response.EnsureSuccessStatusCode();
-                httpClient.Dispose();
-                string sd = response.Content.ReadAsStringAsync().Result;
-                System.Diagnostics.Debug.WriteLine(sd);
-                MultiPost(cookie, "", 0);
-                return true;
-            }
-            catch(Exception ex) {
-                System.Diagnostics.Debug.WriteLine(ex.Message);
-                return false;
-            }
-        }
+        //        HttpClient httpClient = new HttpClient();
+        //        MultipartFormDataContent form = new MultipartFormDataContent();
+        //        form.Add(new StringContent(resourceName), "filename");
+        //        form.Add(new StringContent(cookie), "cookie");
+        //        form.Add(new ByteArrayContent(File.ReadAllBytes(resourcePath)), "file");
+        //        HttpResponseMessage response = await httpClient.PostAsync(url, form);
+        //        response.EnsureSuccessStatusCode();
+        //        httpClient.Dispose();
+        //        string sd = response.Content.ReadAsStringAsync().Result;
+        //        System.Diagnostics.Debug.WriteLine(sd);
+        //        MultiPost(cookie, "", 0);
+        //        return true;
+        //    }
+        //    catch(Exception ex) {
+        //        System.Diagnostics.Debug.WriteLine(ex.Message);
+        //        return false;
+        //    }
+        //}
     }
 }

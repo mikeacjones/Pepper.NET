@@ -37,7 +37,7 @@ namespace PepperNET
         public void UploadResource(string resourcePath)
         {
             Record newResource = Database["resources"].CreateRecord();
-            newResource["resource_id"] = Database["resources"].Max(r => int.Parse(r["resource_id"].ToString())) + 1;
+            newResource["resource_id"] = -1;
             newResource["resource_name"] = Path.GetFileNameWithoutExtension(resourcePath);
             newResource["resource_type"] = Path.GetExtension(resourcePath).Substring(1);
             newResource["default_player"] = Utils.GetDefaultPlayer(resourcePath);
@@ -54,6 +54,7 @@ namespace PepperNET
             newResource["shortcut"] = false;
             newResource["shortcut_business_id"] = -1;
             newResource["shortcut_resource_id"] = -1;
+            newResource["changelist_id"] = -1;
             Database["resources"].Add(newResource);
             _FileToUpload.Push(resourcePath);
         }

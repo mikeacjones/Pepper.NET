@@ -38,7 +38,6 @@ namespace PepperNET
             foreach (var table in tablesWithChanges) table.AppendChangesToChangelist(changeList);
             foreach (var table in tablesWithDeletes) table.AppendDeletesToChangelist(changeList);
 
-            System.Console.WriteLine(xdoc.ToString());
             return xdoc;
         }
         public int TableCount { get { return Count; } }

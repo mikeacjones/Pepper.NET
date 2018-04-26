@@ -31,7 +31,7 @@ namespace PepperNET
         }
         public static int GetDefaultPlayer(string file)
         {
-            switch (Path.GetExtension(file))
+            switch (Path.GetExtension(file).Remove(0,1))
             {
                 case "flv":
                 case "mp4":

@@ -26,9 +26,12 @@ namespace PepperNET
                 if (!base.ContainsKey(index)) base.Add(index, value);
                 else
                 {
+                    if (value == base[index]) return;
+
                     Modified = true;
                     base[index] = value;
-                    base["change_type"] = 1;
+                    if ((int)base["change_type"] <= 1)
+                        base["change_type"] = 1;
                 }
             }
         }
