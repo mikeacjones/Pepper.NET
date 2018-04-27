@@ -2,7 +2,7 @@
 
 namespace PepperNET
 {
-    internal class StandardReturn
+    public class StandardReturn
     {
         readonly SetOnce<string> _Ret = new SetOnce<string>();
         readonly SetOnce<string> _Error = new SetOnce<string>();
