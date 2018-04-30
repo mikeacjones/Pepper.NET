@@ -37,7 +37,6 @@ namespace PepperNET
                 requestStream.Write(formData, 0, formData.Length);
                 requestStream.Close();
             }
-
             return request.GetResponse() as HttpWebResponse;
         }
         private static byte[] GetMultipartFormData(Dictionary<string, object> postParameters, string boundary)
