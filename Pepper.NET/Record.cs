@@ -32,7 +32,7 @@ namespace PepperNET
 
                     Modified = true;
                     base[index] = value;
-                    if ((int)base["change_type"] <= 1)
+                    if (int.Parse(base["change_type"].ToString()) <= 1)
                         base["change_type"] = 1;
                 }
             }

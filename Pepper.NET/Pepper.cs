@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace PepperNET
 {
@@ -10,10 +12,23 @@ namespace PepperNET
         private Stack<FilePack> _FileToUpload;
         public Database Database { get; private set; }
 
-        public void DbConnect(string user, string pass)
+        public Pepper(string user = null, string pass = null)
         {
-            _LoadManager = new LoadManager(user, pass);
-            _LoadManager.Init();
+            if (user != null && pass != null)
+            {
+                _LoadManager = new LoadManager(user, pass);
+                _LoadManager.Init();
+            }
+        }
+        public void DbConnect(string user = null, string pass = null)
+        {
+            if (user != null && pass != null)
+            {
+                _LoadManager = new LoadManager(user, pass);
+                _LoadManager.Init();
+            }
+            if (_LoadManager == null)
+                throw new System.Exception("Missing username and password");
             _FileToUpload = new Stack<FilePack>();
 
             Database = new Database();
@@ -112,6 +127,29 @@ namespace PepperNET
             var rec = Database["resources"].Where(r => r["resource_id"].ToString() == resourceID).FirstOrDefault();
             if (rec == null) return;
             Database["resources"].Remove(rec);
+        }
+
+        public XmlDocument GetStationStatus(int branch = -1)
+        {
+            var ret = new XmlDocument();
+            ret.LoadXml(_LoadManager.GetStatusStatus(branch));
+            return ret;
+        }
+        public void StopStationByID(string stationID)
+        {
+            _LoadManager.SendCommandToStation(stationID, "stop");
+        }
+        public void StartStationByID(string stationID)
+        {
+            _LoadManager.SendCommandToStation(stationID, "start");
+        }
+        public void RebootStationByID(string stationID)
+        {
+            _LoadManager.SendCommandToStation(stationID, "rebootPlayer");
+        }
+        public void ClearStationCachingByID(string stationID)
+        {
+            _LoadManager.SendCommandToStation(stationID, "clearCaching");
         }
     }
     internal struct FilePack

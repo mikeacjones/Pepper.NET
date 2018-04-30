@@ -10,6 +10,8 @@ namespace PepperNET
     {
         readonly SetOnce<UserDomainInfo> _UserDomainInfo = new SetOnce<UserDomainInfo>();
         readonly SetOnce<string> _UserPass = new SetOnce<string>();
+        private string _username;
+        private string _password;
         public UserDomainInfo UserDomainInfo
         {
             get { return _UserDomainInfo; }
@@ -22,6 +24,8 @@ namespace PepperNET
         }
         public LoadManager(string user, string pass)
         {
+            this._username = user;
+            this._password = pass;
             var userPass = user + "," + pass;
             userPass = Utils.Base64Encode(userPass);
             userPass = userPass.Replace('=', '.').Replace('+', '_').Replace('/', '-');
@@ -31,6 +35,20 @@ namespace PepperNET
         {
             var url = string.Format("https://galaxy.signage.me/WebService/getUserDomain.ashx?i_userpass={0}", UserPass);
             UserDomainInfo = Utils.GetHttpResponse(url);
+        }
+        public void SendCommandToStation(string stationID, string command)
+        {
+            string url = string.Format(
+                "https://{0}/WebService/sendCommand.ashx?i_user={1}&i_password={2}&i_stationId={3}&i_command={4}&i_param1=SignageStudioLite&i_param2=&_={5}",
+                UserDomainInfo.Domain,
+                _username,
+                _password,
+                stationID,
+                command,
+                Utils.GetCurrentUnixTimestampSeconds()
+            );
+            Console.WriteLine(url);
+            Utils.GetHttpResponse(url);
         }
         public XmlDocument LoadData()
         {
@@ -42,6 +60,18 @@ namespace PepperNET
             XmlDocument xmlDoc = new XmlDocument();
             xmlDoc.LoadXml(xml);
             return xmlDoc;
+        }
+        public string GetStatusStatus(int branchId = -1)
+        {
+            string url = string.Format(
+                "https://{0}/WebService/StationService.asmx/getStatus?i_businessId={1}&branchId={2}",
+                UserDomainInfo.Domain,
+                UserDomainInfo.BusinessID,
+                branchId
+            );
+            XmlDocument xDoc = new XmlDocument();
+            xDoc.LoadXml(Utils.GetHttpResponse(url));
+            return xDoc.DocumentElement.ChildNodes[0].Value;
         }
         public StandardReturn SaveData(XDocument changeList, Stack<FilePack> filesToUpload)
         {
