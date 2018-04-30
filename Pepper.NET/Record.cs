@@ -4,6 +4,8 @@ namespace PepperNET
 {
     public class Record : Dictionary<string, object>
     {
+        private SetOnce<int?> _Handle = new SetOnce<int?>();
+        public int Handle { get { return _Handle.Value ?? -1; } set { _Handle.Value = value; } }
         public bool Modified { get; private set; }
         public SetOnce<bool?> _NewRecord = new SetOnce<bool?>();
         public bool NewRecord { get { return _NewRecord.Value ?? false; } set { _NewRecord.Value = value; } }

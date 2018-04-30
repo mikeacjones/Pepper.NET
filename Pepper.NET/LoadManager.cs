@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net.Http;
-using System.Threading.Tasks;
+using System.Net;
+using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -45,7 +45,7 @@ namespace PepperNET
             xmlDoc.LoadXml(xml);
             return xmlDoc;
         }
-        public StandardReturn SaveData(XDocument changeList, Stack<string> filesToUpload)
+        public StandardReturn SaveData(XDocument changeList, Stack<FilePack> filesToUpload)
         {
             StandardReturn cookieRet = BeginPostSession();
             string data = Utils.Base64Encode(changeList.ToString()).Replace('=', '.').Replace('+', '_').Replace('/', '-');
@@ -54,16 +54,19 @@ namespace PepperNET
             while (filesToUpload != null && filesToUpload.Count > 0)
             {
                 var fileToUpload = filesToUpload.Pop();
-                HttpClient httpClient = new HttpClient();
-                MultipartFormDataContent form = new MultipartFormDataContent();
-                form.Add(new StringContent(Path.GetFileName(fileToUpload)), "filename");
-                form.Add(new StringContent(cookieRet), "cookie");
-                form.Add(new ByteArrayContent(File.ReadAllBytes(fileToUpload)), "file");
-                var postTask = httpClient.PostAsync(uploadURL, form);
-                postTask.Wait();
-                HttpResponseMessage response = postTask.Result; 
-                response.EnsureSuccessStatusCode();
-                httpClient.Dispose();
+                var fileParm = new FormUpload.FileParameter(
+                    fileToUpload.FilePath, 
+                    Path.GetFileName(fileToUpload.FilePath)
+                );
+               
+                var response = FormUpload.MultipartFormDataPost(
+                    uploadURL,
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36",
+                    new Dictionary<string, object> {
+                        { "cookie", cookieRet.Ret },
+                        { "file", fileParm },
+                        { "filename", fileToUpload.FileRecord.Handle + "." + fileToUpload.FileRecord["resource_type"] }
+                    });
             }
 
             StandardReturn saveResult = MultiPost(cookieRet, data, 0);
@@ -79,6 +82,96 @@ namespace PepperNET
 
             return saveResult;
         }
+        //private string UploadFile(string endpointUrl, string filePath, string cookie, string resourceName)
+        //{
+
+        //    FileStream fs = null;
+        //    Stream rs = null;
+        //    string result = "";
+        //    try
+        //    {
+
+        //        string uploadFileName = System.IO.Path.GetFileName(filePath);
+
+        //        fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+
+        //        var request = (HttpWebRequest)WebRequest.Create(endpointUrl);
+        //        request.Method = WebRequestMethods.Http.Post;
+        //        request.AllowWriteStreamBuffering = false;
+        //        request.SendChunked = true;
+        //        String CRLF = "\r\n"; // Line separator required by multipart/form-data.        
+        //        long timestamp = Utils.GetCurrentUnixTimestampSeconds();
+
+        //        string boundary = "------" + timestamp.ToString("x");
+        //        request.ContentType = "multipart/form-data; boundary=" + boundary;
+        //        request.Accept = "*/*";
+
+        //        long bytesAvailable = fs.Length;
+        //        long maxBufferSize = 1 * 1024 * 1024;
+
+
+        //        rs = request.GetRequestStream();
+        //        byte[] buffer = new byte[50];
+        //        int read = 0;
+
+        //        byte[] buf = Encoding.UTF8.GetBytes(boundary + CRLF);
+        //        rs.Write(buf, 0, buf.Length);
+
+        //        buf = Encoding.UTF8.GetBytes("Content-Disposition: form-data; name=\"cookie\"" + CRLF + CRLF + cookie + CRLF);
+        //        rs.Write(buf, 0, buf.Length);
+
+        //        buf = Encoding.UTF8.GetBytes(boundary + CRLF);
+        //        rs.Write(buf, 0, buf.Length);
+
+        //        buf = Encoding.UTF8.GetBytes("Content-Disposition: form-data; name=\"file\"; filename=\"" + uploadFileName + "\"" + CRLF);
+        //        rs.Write(buf, 0, buf.Length);
+
+        //        buf = Encoding.UTF8.GetBytes("Content-Type: image/png" + CRLF + CRLF + CRLF);
+        //        rs.Write(buf, 0, buf.Length);
+
+        //        buf = Encoding.UTF8.GetBytes(boundary + CRLF);
+        //        rs.Write(buf, 0, buf.Length);
+
+        //        buf = Encoding.UTF8.GetBytes("Content-Disposition: form-data; name=\"filename\"" + CRLF + CRLF + resourceName + CRLF);
+        //        rs.Write(buf, 0, buf.Length);
+
+        //        buf = Encoding.UTF8.GetBytes(boundary + "--" + CRLF);
+        //        rs.Write(buf, 0, buf.Length);
+
+        //        //writer.append("Content-Type: application/octet-stream;").append(CRLF);
+        //        rs.Flush();
+
+
+        //        long bufferSize = Math.Min(bytesAvailable, maxBufferSize);
+        //        buffer = new byte[bufferSize];
+        //        while ((read = fs.Read(buffer, 0, buffer.Length)) != 0)
+        //        {
+        //            rs.Write(buffer, 0, read);
+        //        }
+        //        buf = Encoding.UTF8.GetBytes(CRLF);
+        //        rs.Write(buf, 0, buf.Length);
+        //        rs.Flush();
+
+
+        //        // End of multipart/form-data.
+        //        buffer = Encoding.UTF8.GetBytes(boundary + "--" + CRLF);
+        //        rs.Write(buffer, 0, buffer.Length);
+
+        //        using (var response = request.GetResponse())
+        //        using (var responseStream = response.GetResponseStream())
+        //        using (var reader = new StreamReader(responseStream))
+        //        {
+
+        //            result = reader.ReadToEnd();
+        //        }
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        result = e.InnerException != null ? e.InnerException.Message : e.Message;
+        //    }
+
+        //    return result;
+        //}
         private StandardReturn BeginPostSession()
         {
             string url = string.Format("https://{0}/WebService/SubmitData.ashx?command=Begin&userpass={1}&appVersion=4.12&appType=StudioLite", UserDomainInfo.Domain, UserPass);
@@ -102,6 +195,7 @@ namespace PepperNET
             else return MultiPost(cookie, data, j);
         }
         private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
         //public async Task<bool> UploadResource(string resourceName, string resourcePath)
         //{
         //    try

@@ -10,6 +10,7 @@ namespace PepperNET
 {
     public class Table : List<Record>
     {
+        private int LastHandle = 0;
         private string _Name;
         private Field[] _Fields;
         private List<Record> _RemovedRecords;
@@ -32,6 +33,18 @@ namespace PepperNET
                 _Fields = fields.ToArray();
             }
         }
+        public new void RemoveAll(Predicate<Record> pred)
+        {
+            foreach (var rec in this)
+                if (pred(rec))
+                    _RemovedRecords.Add(rec);
+            base.RemoveAll(pred);
+        }
+        public new void RemoveAt(int i)
+        {
+            _RemovedRecords.Add(this.ElementAt(i));
+            base.RemoveAt(i);
+        }
         public new void Remove(Record rec)
         {
             _RemovedRecords.Add(rec);
@@ -48,6 +61,7 @@ namespace PepperNET
                     rec[_Fields[i].FieldName] = record.ChildNodes[i].InnerText;
                 this.Add(rec);
             }
+            LastHandle = RecordsCount;
         }
         public void ChangesCommitted(int changeID)
         {
@@ -72,7 +86,8 @@ namespace PepperNET
                 ),
                 new XElement("New",
                 newRecords.Select(rec => new XElement("Rec",
-                        _Fields.Where(f => f.ForeignTable != null).Select(f => new XAttribute(f.FieldName, rec[f.FieldName])),
+                        new XAttribute(_Fields[0].FieldName, rec.Handle),
+                        _Fields.Where(f => f.ForeignTable != null && f.FieldName != _Fields[0].FieldName).Select(f => new XAttribute(f.FieldName, rec[f.FieldName])),
                         _Fields.Select(f => new XElement("Col", rec[f.FieldName] ?? "null"))
                     ))
                 ),
@@ -110,7 +125,7 @@ namespace PepperNET
         }
         public Record CreateRecord()
         {
-            Record rec = new Record() { NewRecord = true };
+            Record rec = new Record() { NewRecord = true, Handle = ++LastHandle };
             for (int i = 0; i < _Fields.Length; i++)
             {
                 rec[_Fields[i].FieldName] = null;

@@ -7,14 +7,14 @@ namespace PepperNET
     public class Pepper
     {
         private LoadManager _LoadManager;
-        private Stack<string> _FileToUpload;
+        private Stack<FilePack> _FileToUpload;
         public Database Database { get; private set; }
 
         public void DbConnect(string user, string pass)
         {
             _LoadManager = new LoadManager(user, pass);
             _LoadManager.Init();
-            _FileToUpload = new Stack<string>();
+            _FileToUpload = new Stack<FilePack>();
 
             Database = new Database();
             var signageData = _LoadManager.LoadData();
@@ -35,10 +35,11 @@ namespace PepperNET
             if (signageData != null) Database.PopulateTables(signageData);
         }
 
-        public void UploadResource(string resourcePath)
+        public int UploadResource(string resourcePath)
         {
             Record newResource = Database["resources"].CreateRecord();
             newResource["resource_id"] = -1;
+            newResource["changelist_id"] = -1;
             newResource["resource_name"] = Path.GetFileNameWithoutExtension(resourcePath);
             newResource["resource_type"] = Path.GetExtension(resourcePath).Substring(1);
             newResource["default_player"] = Utils.GetDefaultPlayer(resourcePath);
@@ -57,9 +58,10 @@ namespace PepperNET
             newResource["shortcut_resource_id"] = -1;
             newResource["changelist_id"] = -1;
             Database["resources"].Add(newResource);
-            _FileToUpload.Push(resourcePath);
+            _FileToUpload.Push(new FilePack { FilePath = resourcePath, FileRecord = newResource });
+            return newResource.Handle;
         }
-        public void CreateBranchStation(string stationName, int campaignBoardID)
+        public int CreateBranchStation(string stationName, int campaignBoardID)
         {
             Record newBranchStation = Database["branch_stations"].CreateRecord();
             newBranchStation["branch_station_id"] = -1;
@@ -103,6 +105,7 @@ namespace PepperNET
             newBranchStation["lan_server_enabled"] = false;
             newBranchStation["lan_server_port"] = 9999;
             Database["branch_stations"].Add(newBranchStation);
+            return newBranchStation.Handle;
         }
         public void DeleteResource(string resourceID)
         {
@@ -110,5 +113,10 @@ namespace PepperNET
             if (rec == null) return;
             Database["resources"].Remove(rec);
         }
+    }
+    internal struct FilePack
+    {
+        public Record FileRecord { get; set; }
+        public string FilePath { get; set; }
     }
 }
