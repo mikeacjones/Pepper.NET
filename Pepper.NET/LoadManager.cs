@@ -45,7 +45,7 @@ namespace PepperNET
             xmlDoc.LoadXml(xml);
             return xmlDoc;
         }
-        public int SaveData(XDocument changeList, Stack<string> filesToUpload)
+        public StandardReturn SaveData(XDocument changeList, Stack<string> filesToUpload)
         {
             StandardReturn cookieRet = BeginPostSession();
             string data = Utils.Base64Encode(changeList.ToString()).Replace('=', '.').Replace('+', '_').Replace('/', '-');
@@ -67,7 +67,6 @@ namespace PepperNET
             }
 
             StandardReturn saveResult = MultiPost(cookieRet, data, 0);
-            Console.WriteLine(saveResult);
             int changeListID = -1;
             try
             {
@@ -78,7 +77,7 @@ namespace PepperNET
             }
             catch { }
 
-            return changeListID;
+            return saveResult;
         }
         private StandardReturn BeginPostSession()
         {
@@ -97,11 +96,12 @@ namespace PepperNET
                 UserDomainInfo.Domain, 
                 cookie, 
                 dChunk, 
-                DateTimeOffset.Now.ToUnixTimeSeconds());
+                Utils.GetCurrentUnixTimestampSeconds());
             StandardReturn response = Utils.GetHttpResponse(url);
             if (i == j)  return response;
             else return MultiPost(cookie, data, j);
         }
+        private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         //public async Task<bool> UploadResource(string resourceName, string resourcePath)
         //{
         //    try

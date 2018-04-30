@@ -20,13 +20,14 @@ namespace PepperNET
             var signageData = _LoadManager.LoadData();
             if (signageData != null) Database.PopulateTables(signageData);
         }
-        public SaveResult SaveChanges()
+        public StandardReturn SaveChanges()
         {
             var changeList = Database.GetChangeList();
-            if (changeList == null) return SaveResult.NoChanges;
-            int changelistID = _LoadManager.SaveData(changeList, _FileToUpload);
+            if (changeList == null) return null;
+            var svRet = _LoadManager.SaveData(changeList, _FileToUpload);
+            int changelistID = Utils.GetChangelistID(svRet);
             if (changelistID > 0) Database.ChangesCommitted(changelistID);
-            return changelistID > 0 ? SaveResult.Success : SaveResult.Failure;
+            return svRet;
         }
         public void Sync()
         {
@@ -57,6 +58,51 @@ namespace PepperNET
             newResource["changelist_id"] = -1;
             Database["resources"].Add(newResource);
             _FileToUpload.Push(resourcePath);
+        }
+        public void CreateBranchStation(string stationName, int campaignBoardID)
+        {
+            Record newBranchStation = Database["branch_stations"].CreateRecord();
+            newBranchStation["branch_station_id"] = -1;
+            newBranchStation["branch_id"] = -1;
+            newBranchStation["campaign_board_id"] = campaignBoardID;
+            newBranchStation["station_name"] = stationName;
+            newBranchStation["reboot_exceed_mem_enabled"] = false;
+            newBranchStation["reboot_exceed_mem_value"] = 1;
+            newBranchStation["reboot_time_enabled"] = false;
+            newBranchStation["reboot_time_value"] = 0;
+            newBranchStation["reboot_error_enabled"] = true;
+            newBranchStation["monitor_standby_enabled"] = false;
+            newBranchStation["monitor_standby_from"] = 3600;
+            newBranchStation["monitor_standby_to"] = 14400;
+            newBranchStation["location_long"] = -1;
+            newBranchStation["location_lat"] = -1;
+            newBranchStation["map_zoom"] = 4;
+            newBranchStation["reboot_exceed_mem_action"] = 1;
+            newBranchStation["reboot_time_action"] = 2;
+            newBranchStation["reboot_error_action"] = 1;
+            newBranchStation["station_mode"] = 1;
+            newBranchStation["power_mode"] = 0;
+            newBranchStation["power_on_day1"] = 25200;
+            newBranchStation["power_off_day1"] = 68400;
+            newBranchStation["power_on_day2"] = 25200;
+            newBranchStation["power_off_day2"] = 68400;
+            newBranchStation["power_on_day3"] = 25200;
+            newBranchStation["power_off_day3"] = 68400;
+            newBranchStation["power_on_day4"] = 25200;
+            newBranchStation["power_off_day4"] = 68400;
+            newBranchStation["power_on_day5"] = 25200;
+            newBranchStation["power_off_day5"] = 68400;
+            newBranchStation["power_on_day6"] = 25200;
+            newBranchStation["power_off_day6"] = 68400;
+            newBranchStation["power_on_day7"] = 25200;
+            newBranchStation["power_off_day7"] = 68400;
+            newBranchStation["send_notification"] = false;
+            newBranchStation["frame_rate"] = 24;
+            newBranchStation["quality"] = 2;
+            newBranchStation["transition_enabled"] = true;
+            newBranchStation["lan_server_enabled"] = false;
+            newBranchStation["lan_server_port"] = 9999;
+            Database["branch_stations"].Add(newBranchStation);
         }
         public void DeleteResource(string resourceID)
         {
