@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using System.Xml;
-using System.Xml.Linq;
 
 namespace PepperNET
 {
@@ -49,7 +48,6 @@ namespace PepperNET
             var signageData = _LoadManager.LoadData();
             if (signageData != null) Database.PopulateTables(signageData);
         }
-
         public int UploadResource(string resourcePath)
         {
             Record newResource = Database["resources"].CreateRecord();
@@ -128,7 +126,6 @@ namespace PepperNET
             if (rec == null) return;
             Database["resources"].Remove(rec);
         }
-
         public XmlDocument GetStationStatus(int branch = -1)
         {
             var ret = new XmlDocument();
